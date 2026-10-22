@@ -1,0 +1,62 @@
+services:
+  mariadb:
+    image: mariadb:10.11
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MARIADB_USER: ${MARIADB_USER}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+      MARIADB_DATABASE: ${MARIADB_DATABASE}
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - moodle
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - moodle
+
+  moodle:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      MOODLE_DATABASE_TYPE: mariadb
+      MOODLE_DATABASE_HOST: mariadb
+      MOODLE_DATABASE_PORT_NUMBER: 3306
+      MOODLE_DATABASE_NAME: ${MARIADB_DATABASE}
+      MOODLE_DATABASE_USER: ${MARIADB_USER}
+      MOODLE_DATABASE_PASSWORD: ${MARIADB_PASSWORD}
+      REDIS_HOST: redis
+      MOODLE_USERNAME: ${MOODLE_USERNAME}
+      MOODLE_PASSWORD: ${MOODLE_PASSWORD}
+      MOODLE_EMAIL: ${MOODLE_EMAIL}
+      MOODLE_SITE_NAME: TechHub
+      MOODLE_HOST: ${MOODLE_HOST:-https://hu-techhub.org}
+    volumes:
+      - moodle_data:/var/moodledata
+      - moodle_html:/var/www/html
+    depends_on:
+      - mariadb
+      - redis
+    networks:
+      - moodle
+      - dokploy-network
+
+volumes:
+  moodle_data:
+  moodle_html:
+  mariadb_data:
+  redis_data:
+
+networks:
+  moodle:
+    driver: bridge
+  dokploy-network:
+    external: true
