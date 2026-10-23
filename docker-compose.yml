@@ -90,8 +90,6 @@ services:
 volumes:
   # These must be the exact existing production volume names from docker inspect.
   mariadb_data:
-    external: true
-    name: ${MARIADB_DATA_VOLUME_NAME:?Set the exact current MariaDB volume name}
   moodle_data:
     external: true
     name: ${MOODLE_DATA_VOLUME_NAME:?Set the exact current Moodledata volume name}
