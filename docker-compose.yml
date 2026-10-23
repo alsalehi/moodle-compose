@@ -91,11 +91,7 @@ volumes:
   # These must be the exact existing production volume names from docker inspect.
   mariadb_data1:
   moodle_data:
-    external: true
-    name: ${MOODLE_DATA_VOLUME_NAME:?Set the exact current Moodledata volume name}
   current_moodle_code:
-    external: true
-    name: ${MOODLE_CURRENT_CODE_VOLUME_NAME:?Set the exact current Moodle 5.2.2 code volume name}
 
   # New volume for the existing site's config.php; retain this name on future deploys.
   moodle_config:
