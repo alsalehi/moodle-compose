@@ -58,7 +58,7 @@ RUN set -eux; \
       oniguruma; \
     docker-php-ext-configure gd --with-freetype --with-jpeg; \
     docker-php-ext-install -j"$(nproc)" \
-      curl exif gd intl mbstring mysqli opcache pdo_mysql soap zip; \
+      curl exif gd intl mbstring mysqli opcache pdo_mysql soap zip sodium; \
     pecl install "redis-${REDIS_EXTENSION_VERSION}"; \
     docker-php-ext-enable redis; \
     apk del .build-deps; \
