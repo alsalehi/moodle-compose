@@ -58,11 +58,11 @@ RUN set -eux; \
       oniguruma; \
     docker-php-ext-configure gd --with-freetype --with-jpeg; \
     docker-php-ext-install -j"$(nproc)" \
-      curl exif gd intl mbstring mysqli opcache pdo_mysql soap zip sodium; \
+      curl exif gd intl mbstring mysqli opcache pdo_mysql soap zip xmlrpc xml; \
     pecl install "redis-${REDIS_EXTENSION_VERSION}"; \
     docker-php-ext-enable redis; \
     apk del .build-deps; \
-    php -r 'foreach (["curl", "exif", "gd", "intl", "mbstring", "mysqli", "opcache", "pdo_mysql", "redis", "soap", "sodium", "zip"] as $ext) { if (!extension_loaded($ext)) { fwrite(STDERR, "Missing required PHP extension: {$ext}\\n"); exit(1); } }'
+    php -r 'foreach (["curl", "exif", "gd", "intl", "mbstring", "mysqli", "opcache", "pdo_mysql", "redis", "soap", "xml", "zip"] as $ext) { if (!extension_loaded($ext)) { fwrite(STDERR, "Missing required PHP extension: {$ext}\\n"); exit(1); } }'
 
 COPY --from=moodle-source /var/www/html/ /var/www/html/
 COPY docker/php.ini /usr/local/etc/php/conf.d/zz-moodle.ini
