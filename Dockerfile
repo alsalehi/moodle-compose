@@ -59,7 +59,7 @@ RUN set -eux; \
 RUN set -eux; \
     docker-php-ext-configure gd --with-freetype --with-jpeg; \
     docker-php-ext-install -j"$(nproc)" \
-      exif gd intl mysqli pdo_mysql soap zip
+      exif gd intl mysqli pdo_mysql soap zip opcache
 
 # PhpRedis 6.2.0 supports PHP 8.4. Pin it instead of relying on the PECL latest
 # alias (6.3.0 metadata was intermittently unavailable from PECL infrastructure).
