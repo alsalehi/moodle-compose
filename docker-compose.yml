@@ -109,5 +109,3 @@ networks:
     driver: bridge
   moodle-frontend:
     driver: bridge
-  dokploy-network:
-    external: true
