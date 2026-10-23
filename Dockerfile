@@ -1,51 +1,89 @@
-FROM php:8.4.26-apache
+# syntax=docker/dockerfile:1.7
+# Versioned Moodle source and PHP-FPM runtime, with a separate Nginx target.
+# Official Moodle 5.2.4 source archive is verified by the published SHA-256.
 
-# Install required system dependencies for Moodle PHP extensions
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpng-dev \
-    libjpeg62-turbo-dev \
-    libfreetype6-dev \
-    libzip-dev \
-    libicu-dev \
-    libxml2-dev \
-    libonig-dev \
-    libsodium-dev \
-    git \
-    unzip \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+ARG PHP_BASE_IMAGE=php:8.4.26-fpm-alpine
+ARG NGINX_BASE_IMAGE=nginx:1.28-alpine
+ARG ALPINE_BASE_IMAGE=alpine:3.24
+ARG MOODLE_VERSION=5.2.4
+ARG MOODLE_SHA256=8569b63f1e97416ecb67ec75767dd20675892c7a62a5e90d1647366fddf873cf
+ARG REDIS_EXTENSION_VERSION=6.3.0
 
-# Configure & install PHP extensions required by Moodle
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) \
-        mysqli \
-        pdo_mysql \
-        gd \
-        intl \
-        zip \
-        opcache \
-        soap \
-        bcmath \
-        sodium \
-        exif
+FROM ${ALPINE_BASE_IMAGE} AS moodle-source
+ARG MOODLE_VERSION
+ARG MOODLE_SHA256
 
-# Install Redis extension
-RUN pecl install redis && docker-php-ext-enable redis
+RUN set -eux; \
+    apk add --no-cache ca-certificates curl tar; \
+    curl --fail --location --retry 5 --retry-delay 2 \
+      "https://download.moodle.org/download.php/direct/stable502/moodle-${MOODLE_VERSION}.tgz" \
+      --output /tmp/moodle.tgz; \
+    echo "${MOODLE_SHA256}  /tmp/moodle.tgz" | sha256sum -c -; \
+    mkdir -p /var/www/html; \
+    tar -xzf /tmp/moodle.tgz --strip-components=1 -C /var/www/html; \
+    rm -f /tmp/moodle.tgz
 
-# Enable Apache mod_rewrite & mod_headers
-RUN a2enmod rewrite headers
+# Store third-party/site plugins at their Moodle-relative paths under moodle-plugins/.
+COPY moodle-plugins/ /tmp/moodle-plugins/
+RUN set -eux; \
+    cp -a /tmp/moodle-plugins/. /var/www/html/; \
+    rm -rf /tmp/moodle-plugins; \
+    rm -f /var/www/html/.gitkeep; \
+    chown -R root:root /var/www/html
 
-# Prepare moodledata directory with standard permissions
-RUN mkdir -p /var/moodledata && chown -R www-data:www-data /var/moodledata
+FROM ${PHP_BASE_IMAGE} AS php-fpm
+ARG REDIS_EXTENSION_VERSION
+
+# Install build dependencies temporarily, compile required Moodle PHP extensions,
+# and include phpredis because the original Compose deployment includes Redis.
+RUN set -eux; \
+    apk add --no-cache --virtual .build-deps \
+      $PHPIZE_DEPS \
+      curl-dev \
+      freetype-dev \
+      icu-dev \
+      libjpeg-turbo-dev \
+      libpng-dev \
+      libxml2-dev \
+      libzip-dev \
+      oniguruma-dev; \
+    apk add --no-cache \
+      curl \
+      freetype \
+      icu-libs \
+      libjpeg-turbo \
+      libpng \
+      libxml2 \
+      libzip \
+      oniguruma; \
+    docker-php-ext-configure gd --with-freetype --with-jpeg; \
+    docker-php-ext-install -j"$(nproc)" \
+      curl exif gd intl mbstring mysqli opcache pdo_mysql soap zip; \
+    pecl install "redis-${REDIS_EXTENSION_VERSION}"; \
+    docker-php-ext-enable redis; \
+    apk del .build-deps; \
+    php -r 'foreach (["curl", "exif", "gd", "intl", "mbstring", "mysqli", "opcache", "pdo_mysql", "redis", "soap", "sodium", "zip"] as $ext) { if (!extension_loaded($ext)) { fwrite(STDERR, "Missing required PHP extension: {$ext}\\n"); exit(1); } }'
+
+COPY --from=moodle-source /var/www/html/ /var/www/html/
+COPY docker/php.ini /usr/local/etc/php/conf.d/zz-moodle.ini
+COPY docker/www.conf /usr/local/etc/php-fpm.d/www.conf
+COPY docker/moodle-entrypoint.sh /usr/local/bin/moodle-entrypoint
+
+RUN set -eux; \
+    chmod 0755 /usr/local/bin/moodle-entrypoint; \
+    mkdir -p /var/moodledata /var/www/moodle-config /var/www/current-moodle-code; \
+    chown www-data:www-data /var/moodledata
 
 WORKDIR /var/www/html
+EXPOSE 9000
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD php-fpm -t >/dev/null 2>&1 || exit 1
+ENTRYPOINT ["moodle-entrypoint"]
+CMD ["php-fpm", "-F"]
 
-# Download Moodle 5.2.4 source release
-RUN curl -sSL https://download.moodle.org/download.php/direct/moodle/moodle-5.2.4.tgz | tar -xz --strip-components=1 \
-    && chown -R www-data:www-data /var/www/html
-
-# Copy custom config and PHP settings
-COPY --chown=www-data:www-data config.php /var/www/html/config.php
-COPY php.ini /usr/local/etc/php/conf.d/moodle.ini
-
+FROM ${NGINX_BASE_IMAGE} AS nginx
+COPY --from=moodle-source /var/www/html/public/ /var/www/html/public/
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD nginx -t >/dev/null 2>&1 || exit 1

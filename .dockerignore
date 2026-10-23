@@ -1,0 +1,14 @@
+.git
+.git/**
+.env
+.env.*
+!.env.example
+backups
+backups/**
+*.sql
+*.sql.gz
+*.dump
+*.tar
+*.tar.gz
+*.tgz
+README.md

@@ -1,0 +1,12 @@
+.env
+.env.*
+!.env.example
+*.sql
+*.sql.gz
+*.dump
+*.tar
+*.tar.gz
+*.tgz
+backups/
+site-plugins.tgz
+.DS_Store

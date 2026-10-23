@@ -3,60 +3,113 @@ services:
     image: mariadb:10.11
     restart: unless-stopped
     environment:
-      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
-      MARIADB_USER: ${MARIADB_USER}
-      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
-      MARIADB_DATABASE: ${MARIADB_DATABASE}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:?Set the existing MariaDB root password in Dokploy}
+      MARIADB_USER: ${MARIADB_USER:?Set the existing Moodle DB username in Dokploy}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:?Set the existing Moodle DB password in Dokploy}
+      MARIADB_DATABASE: ${MARIADB_DATABASE:?Set the existing Moodle database name in Dokploy}
     volumes:
       - mariadb_data:/var/lib/mysql
     networks:
-      - moodle
+      - moodle-backend
+    healthcheck:
+      test: ["CMD-SHELL", "healthcheck.sh --connect --innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
 
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    command: redis-server --appendonly yes
+    command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - redis_data:/data
     networks:
-      - moodle
+      - moodle-backend
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
 
   moodle:
+    image: techhub-moodle:5.2.4-php8.4.26
     build:
       context: .
       dockerfile: Dockerfile
+      target: php-fpm
+      args:
+        PHP_BASE_IMAGE: php:8.4.26-fpm-alpine
+        ALPINE_BASE_IMAGE: alpine:3.24
+        MOODLE_VERSION: 5.2.4
+        MOODLE_SHA256: 8569b63f1e97416ecb67ec75767dd20675892c7a62a5e90d1647366fddf873cf
+        REDIS_EXTENSION_VERSION: 6.3.0
     restart: unless-stopped
     environment:
-      MOODLE_DATABASE_TYPE: mariadb
-      MOODLE_DATABASE_HOST: mariadb
-      MOODLE_DATABASE_PORT_NUMBER: 3306
-      MOODLE_DATABASE_NAME: ${MARIADB_DATABASE}
-      MOODLE_DATABASE_USER: ${MARIADB_USER}
-      MOODLE_DATABASE_PASSWORD: ${MARIADB_PASSWORD}
-      REDIS_HOST: redis
-      MOODLE_USERNAME: ${MOODLE_USERNAME}
-      MOODLE_PASSWORD: ${MOODLE_PASSWORD}
-      MOODLE_EMAIL: ${MOODLE_EMAIL}
-      MOODLE_SITE_NAME: TechHub
-      MOODLE_HOST: ${MOODLE_HOST:-https://hu-techhub.org}
+      TZ: UTC
     volumes:
       - moodle_data:/var/moodledata
-      - moodle_html:/var/www/html
+      - moodle_config:/var/www/moodle-config
+      # Read the current Moodle 5.2.2 code volume only to import its config.php.
+      # Never mount this volume at /var/www/html: that would hide Moodle 5.2.4.
+      - current_moodle_code:/var/www/current-moodle-code:ro
     depends_on:
-      - mariadb
-      - redis
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
-      - moodle
+      - moodle-backend
+      - moodle-frontend
+    healthcheck:
+      test: ["CMD-SHELL", "php-fpm -t >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  nginx:
+    image: techhub-moodle-nginx:5.2.4
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: nginx
+      args:
+        NGINX_BASE_IMAGE: nginx:1.28-alpine
+        ALPINE_BASE_IMAGE: alpine:3.24
+        MOODLE_VERSION: 5.2.4
+        MOODLE_SHA256: 8569b63f1e97416ecb67ec75767dd20675892c7a62a5e90d1647366fddf873cf
+    restart: unless-stopped
+    depends_on:
+      moodle:
+        condition: service_healthy
+    networks:
+      - moodle-frontend
       - dokploy-network
 
 volumes:
-  moodle_data:
-  moodle_html:
+  # These must be the exact existing production volume names from docker inspect.
   mariadb_data:
+    external: true
+    name: ${MARIADB_DATA_VOLUME_NAME:?Set the exact current MariaDB volume name}
+  moodle_data:
+    external: true
+    name: ${MOODLE_DATA_VOLUME_NAME:?Set the exact current Moodledata volume name}
+  current_moodle_code:
+    external: true
+    name: ${MOODLE_CURRENT_CODE_VOLUME_NAME:?Set the exact current Moodle 5.2.2 code volume name}
+
+  # New volume for the existing site's config.php; retain this name on future deploys.
+  moodle_config:
+    name: ${MOODLE_CONFIG_VOLUME_NAME:-techhub_moodle_config}
+  # Redis cache/session data may be rebuilt; this is not Moodle course/file storage.
   redis_data:
+    name: ${REDIS_DATA_VOLUME_NAME:-techhub_redis_data}
 
 networks:
-  moodle:
+  moodle-backend:
+    driver: bridge
+  moodle-frontend:
     driver: bridge
   dokploy-network:
     external: true
