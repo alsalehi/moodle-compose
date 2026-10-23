@@ -34,9 +34,9 @@ RUN set -eux; \
 FROM ${PHP_BASE_IMAGE} AS php-fpm
 ARG REDIS_EXTENSION_VERSION
 
-# Install only development libraries for extensions not already included in the
-# official PHP base image. curl, mbstring, opcache, and sodium are provided
-# and enabled by that image.
+# Install development libraries for extensions compiled below. The official
+# PHP 8.4 image may ship opcache/sodium modules without enabling their INI
+# entries, so enable them explicitly in a later step.
 RUN set -eux; \
     apk add --no-cache --virtual .build-deps \
       $PHPIZE_DEPS \
@@ -59,7 +59,7 @@ RUN set -eux; \
 RUN set -eux; \
     docker-php-ext-configure gd --with-freetype --with-jpeg; \
     docker-php-ext-install -j"$(nproc)" \
-      exif gd intl mysqli pdo_mysql soap zip opcache
+      exif gd intl mysqli pdo_mysql soap zip
 
 # PhpRedis 6.2.0 supports PHP 8.4. Pin it instead of relying on the PECL latest
 # alias (6.3.0 metadata was intermittently unavailable from PECL infrastructure).
@@ -69,9 +69,15 @@ RUN set -eux; \
     docker-php-ext-enable redis; \
     rm -rf /tmp/pear ~/.pearrc
 
+# Enable OPcache and sodium only if they are not already loaded. PHP reports
+# OPcache's extension name as "Zend OPcache" (not "opcache").
+RUN set -eux; \
+    if ! php -r 'exit(extension_loaded("Zend OPcache") ? 0 : 1);'; then docker-php-ext-enable opcache; fi; \
+    if ! php -r 'exit(extension_loaded("sodium") ? 0 : 1);'; then docker-php-ext-enable sodium; fi
+
 RUN set -eux; \
     apk del .build-deps; \
-    php -r 'foreach (["curl", "exif", "gd", "intl", "mbstring", "mysqli", "opcache", "pdo_mysql", "redis", "soap", "sodium", "zip"] as $ext) { if (!extension_loaded($ext)) { fwrite(STDERR, "Missing required PHP extension: {$ext}\n"); exit(1); } }'
+    php -r '$required = ["curl", "exif", "gd", "intl", "mbstring", "mysqli", "opcache", "pdo_mysql", "redis", "soap", "sodium", "zip"]; foreach ($required as $ext) { $loaded = ($ext === "opcache") ? extension_loaded("Zend OPcache") : extension_loaded($ext); if (!$loaded) { fwrite(STDERR, "Missing required PHP extension: {$ext}\n"); exit(1); } }'
 
 COPY --from=moodle-source /var/www/html/ /var/www/html/
 COPY docker/php.ini /usr/local/etc/php/conf.d/zz-moodle.ini
