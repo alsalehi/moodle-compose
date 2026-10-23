@@ -43,7 +43,7 @@ services:
         ALPINE_BASE_IMAGE: alpine:3.24
         MOODLE_VERSION: 5.2.4
         MOODLE_SHA256: 8569b63f1e97416ecb67ec75767dd20675892c7a62a5e90d1647366fddf873cf
-        REDIS_EXTENSION_VERSION: 6.3.0
+        REDIS_EXTENSION_VERSION: 6.2.0
     restart: unless-stopped
     environment:
       TZ: UTC

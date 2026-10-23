@@ -7,7 +7,7 @@ ARG NGINX_BASE_IMAGE=nginx:1.28-alpine
 ARG ALPINE_BASE_IMAGE=alpine:3.24
 ARG MOODLE_VERSION=5.2.4
 ARG MOODLE_SHA256=8569b63f1e97416ecb67ec75767dd20675892c7a62a5e90d1647366fddf873cf
-ARG REDIS_EXTENSION_VERSION=6.3.0
+ARG REDIS_EXTENSION_VERSION=6.2.0
 
 FROM ${ALPINE_BASE_IMAGE} AS moodle-source
 ARG MOODLE_VERSION
@@ -34,35 +34,44 @@ RUN set -eux; \
 FROM ${PHP_BASE_IMAGE} AS php-fpm
 ARG REDIS_EXTENSION_VERSION
 
-# Install build dependencies temporarily, compile required Moodle PHP extensions,
-# and include phpredis because the original Compose deployment includes Redis.
+# Install only development libraries for extensions not already included in the
+# official PHP base image. curl, mbstring, opcache, and sodium are provided
+# and enabled by that image.
 RUN set -eux; \
     apk add --no-cache --virtual .build-deps \
       $PHPIZE_DEPS \
-      curl-dev \
       freetype-dev \
       icu-dev \
       libjpeg-turbo-dev \
       libpng-dev \
       libxml2-dev \
-      libzip-dev \
-      oniguruma-dev; \
+      libzip-dev; \
     apk add --no-cache \
-      curl \
       freetype \
       icu-libs \
       libjpeg-turbo \
       libpng \
       libxml2 \
-      libzip \
-      oniguruma; \
+      libzip
+
+# Keep the install list to extensions that need compiling on this PHP base.
+# Splitting extension installation from PECL makes failures easier to diagnose.
+RUN set -eux; \
     docker-php-ext-configure gd --with-freetype --with-jpeg; \
     docker-php-ext-install -j"$(nproc)" \
-      curl exif gd intl mbstring mysqli opcache pdo_mysql soap zip xml; \
+      exif gd intl mysqli pdo_mysql soap zip
+
+# PhpRedis 6.2.0 supports PHP 8.4. Pin it instead of relying on the PECL latest
+# alias (6.3.0 metadata was intermittently unavailable from PECL infrastructure).
+RUN set -eux; \
+    pecl channel-update pecl.php.net; \
     pecl install "redis-${REDIS_EXTENSION_VERSION}"; \
     docker-php-ext-enable redis; \
+    rm -rf /tmp/pear ~/.pearrc
+
+RUN set -eux; \
     apk del .build-deps; \
-    php -r 'foreach (["curl", "exif", "gd", "intl", "mbstring", "mysqli", "opcache", "pdo_mysql", "redis", "soap", "xml", "zip"] as $ext) { if (!extension_loaded($ext)) { fwrite(STDERR, "Missing required PHP extension: {$ext}\\n"); exit(1); } }'
+    php -r 'foreach (["curl", "exif", "gd", "intl", "mbstring", "mysqli", "opcache", "pdo_mysql", "redis", "soap", "sodium", "zip"] as $ext) { if (!extension_loaded($ext)) { fwrite(STDERR, "Missing required PHP extension: {$ext}\n"); exit(1); } }'
 
 COPY --from=moodle-source /var/www/html/ /var/www/html/
 COPY docker/php.ini /usr/local/etc/php/conf.d/zz-moodle.ini

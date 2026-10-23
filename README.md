@@ -185,6 +185,12 @@ If validation fails:
 
 Test your restore process on a staging copy before relying on it. Do not run the old 5.2.2 code against an already-upgraded 5.2.4 database.
 
+## PHP extension build troubleshooting
+
+The Redis PHP extension is pinned to `6.2.0` in the Dockerfile and Compose build arguments. This is compatible with PHP 8.4 and avoids relying on the PECL `6.3.0` package metadata, which has experienced an upstream metadata problem. The PHP base image already supplies `curl`, `mbstring`, `opcache`, and `sodium`; the Dockerfile checks these modules but does not try to compile them a second time. PHP extension compilation and Redis installation are separate build steps so Docker logs show which one fails.
+
+If a build still fails, inspect the **first** `ERROR` or compiler/PECL error above BuildKit’s final `process ... did not complete successfully` line; that final line alone only identifies the failed Dockerfile step.
+
 ## Version pins and source verification
 
 The current source archive is Moodle 5.2.4 from the official `stable502` download path, with its published SHA-256 pinned in both the Dockerfile defaults and Compose build arguments. The PHP runtime uses the requested `php:8.4.26-fpm-alpine` tag; the separate source-download stage uses Alpine 3.24. To upgrade later, deliberately update the Moodle version and its published checksum, PHP patch tag, and any plugin versions, then rebuild and run the Moodle CLI upgrade.
