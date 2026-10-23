@@ -3,7 +3,7 @@ set -eu
 
 CONFIG_DIR="/var/www/moodle-config"
 CONFIG_FILE="${CONFIG_DIR}/config.php"
-# LEGACY_CONFIG="/var/www/legacy-moodle-code/config.php"
+LEGACY_CONFIG=""
 MOODLE_ROOT="/var/www/html"
 MOODLEDATA="/var/moodledata"
 
