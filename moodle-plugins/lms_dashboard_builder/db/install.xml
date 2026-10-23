@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="local/lms_dashboard_builder/db" VERSION="20260420" COMMENT="XMLDB file for local_lms_dashboard_builder"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
+>
+  <TABLES>
+    <TABLE NAME="local_lms_dashboard_builder_dashboard" COMMENT="Dashboard definitions for LMS dashboard builder">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Dashboard name"/>
+        <FIELD NAME="description" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Dashboard description"/>
+        <FIELD NAME="descriptionformat" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="Format of description"/>
+        <FIELD NAME="contextid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="Context level"/>
+        <FIELD NAME="scope" TYPE="char" LENGTH="30" NOTNULL="true" DEFAULT="system" SEQUENCE="false" COMMENT="Dashboard scope: system, course, category, my"/>
+        <FIELD NAME="category" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="Dashboard category"/>
+        <FIELD NAME="cssclass" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Custom CSS classes for dashboard container"/>
+        <FIELD NAME="status" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="0=draft, 1=published, 2=archived"/>
+        <FIELD NAME="layout" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON encoded layout config"/>
+        <FIELD NAME="isdefault" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="1 if default dashboard"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="contextid" UNIQUE="false" FIELDS="contextid"/>
+        <INDEX NAME="scope_status" UNIQUE="false" FIELDS="scope, status"/>
+        <INDEX NAME="status" UNIQUE="false" FIELDS="status"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_lms_dashboard_builder_widget" COMMENT="Widget instances placed on dashboards">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="dashboardid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Foreign key to local_lms_dashboard_builder_dashboard"/>
+        <FIELD NAME="title" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Widget title"/>
+        <FIELD NAME="widgettype" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false" COMMENT="kpi, chart, table, progress, etc."/>
+        <FIELD NAME="queryid" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="Query identifier or provider key"/>
+        <FIELD NAME="cssclass" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Custom CSS classes for widget slot and card"/>
+        <FIELD NAME="configdata" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON configuration data"/>
+        <FIELD NAME="grid_col" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Column position"/>
+        <FIELD NAME="grid_row" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Row position"/>
+        <FIELD NAME="grid_width" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="6" SEQUENCE="false" COMMENT="Width in grid columns (1-12)"/>
+        <FIELD NAME="grid_height" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="4" SEQUENCE="false" COMMENT="Height in grid rows"/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="6" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_dashboard" TYPE="foreign" FIELDS="dashboardid" REFTABLE="local_lms_dashboard_builder_dashboard" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="dashboardid_sort" UNIQUE="false" FIELDS="dashboardid, sortorder"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_lms_dashboard_builder_query" COMMENT="Saved queries and custom data sources">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Query name"/>
+        <FIELD NAME="provider" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="Provider identifier"/>
+        <FIELD NAME="querytype" TYPE="char" LENGTH="50" NOTNULL="true" DEFAULT="builtin" SEQUENCE="false" COMMENT="builtin, visual, custom_sql"/>
+        <FIELD NAME="querydefinition" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON definition of fields, conditions, groupings"/>
+        <FIELD NAME="customsql" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Approved read-only SQL for admin mode"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="provider" UNIQUE="false" FIELDS="provider"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_lms_dashboard_builder_filter" COMMENT="Global and dashboard-specific filter definitions">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="dashboardid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Foreign key to local_lms_dashboard_builder_dashboard"/>
+        <FIELD NAME="filtertype" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false" COMMENT="daterange, course, category, status, from_request, from_context, from_user, etc."/>
+        <FIELD NAME="label" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="defaultvalue" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="configdata" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON options and dependencies"/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_filter_dashboard" TYPE="foreign" FIELDS="dashboardid" REFTABLE="local_lms_dashboard_builder_dashboard" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="dashboardid" UNIQUE="false" FIELDS="dashboardid"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_lms_dashboard_builder_rolemap" COMMENT="Role-based dashboard visibility and permissions">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="dashboardid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Foreign key to local_lms_dashboard_builder_dashboard"/>
+        <FIELD NAME="roleid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Moodle role ID or -1 for public/visitor access"/>
+        <FIELD NAME="contextlevel" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="50" SEQUENCE="false" COMMENT="Context level: 10=system, 40=category, 50=course"/>
+        <FIELD NAME="allowview" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fk_rolemap_dashboard" TYPE="foreign" FIELDS="dashboardid" REFTABLE="local_lms_dashboard_builder_dashboard" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="dashboard_role" UNIQUE="false" FIELDS="dashboardid, roleid"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_lms_dashboard_builder_audit" COMMENT="Security and audit log for dashboard mutations and queries">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="dashboardid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="action" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="details" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="ipaddress" TYPE="char" LENGTH="45" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="userid_time" UNIQUE="false" FIELDS="userid, timecreated"/>
+        <INDEX NAME="action" UNIQUE="false" FIELDS="action"/>
+      </INDEXES>
+    </TABLE>
+  </TABLES>
+</XMLDB>

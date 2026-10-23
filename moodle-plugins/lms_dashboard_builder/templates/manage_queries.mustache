@@ -1,0 +1,332 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_lms_dashboard_builder/manage_queries
+
+    Query Builder & Data Sources template (Built-in Queries, Visual Query Builder & Admin Custom SQL).
+}}
+<div class="local-lms-dashboard-queries container-fluid px-0">
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link" href="{{manageurl}}">
+                <i class="fa fa-th-large me-1" aria-hidden="true"></i>
+                {{#str}} manage_dashboards, local_lms_dashboard_builder {{/str}}
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active fw-semibold" href="{{actionurl}}">
+                <i class="fa fa-database me-1" aria-hidden="true"></i>
+                {{#str}} manage_queries, local_lms_dashboard_builder {{/str}}
+            </a>
+        </li>
+    </ul>
+
+    <div class="row g-4 mb-4">
+        <!-- Visual Query Builder -->
+        <div class="col-12 col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-light fw-bold small text-uppercase text-muted">
+                    <i class="fa fa-project-diagram me-1 text-primary" aria-hidden="true"></i>
+                    {{#str}} visual_query_builder_heading, local_lms_dashboard_builder {{/str}}
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{actionurl}}" class="row g-2">
+                        <input type="hidden" name="action" value="createvisual">
+                        <input type="hidden" name="sesskey" value="{{sesskey}}">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} query_name, local_lms_dashboard_builder {{/str}}</label>
+                            <input type="text" name="name" class="form-control form-control-sm" placeholder="{{#str}} query_name_placeholder, local_lms_dashboard_builder {{/str}}" required>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} base_data_source, local_lms_dashboard_builder {{/str}}</label>
+                            <select name="source" id="visual-query-source" class="form-select form-select-sm">
+                                {{#sourceoptions}}
+                                <option value="{{value}}">{{label}}</option>
+                                {{/sourceoptions}}
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} dimension_field, local_lms_dashboard_builder {{/str}}</label>
+                            <select name="dimension" id="visual-query-dimension" class="form-select form-select-sm">
+                                {{#dimensionoptions}}
+                                <option value="{{value}}" data-source="{{source}}">{{label}}</option>
+                                {{/dimensionoptions}}
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} custom_grouping_function, local_lms_dashboard_builder {{/str}}</label>
+                            <select name="groupfunc" class="form-select form-select-sm">
+                                {{#groupingoptions}}
+                                <option value="{{value}}">{{label}}</option>
+                                {{/groupingoptions}}
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} metric_field, local_lms_dashboard_builder {{/str}}</label>
+                            <select name="metric" id="visual-query-metric" class="form-select form-select-sm">
+                                {{#metricoptions}}
+                                <option value="{{value}}" data-source="{{source}}">{{label}}</option>
+                                {{/metricoptions}}
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} context_filter_label, local_lms_dashboard_builder {{/str}}</label>
+                            <select name="context_filter" class="form-select form-select-sm">
+                                {{#contextfilteroptions}}
+                                <option value="{{value}}">{{label}}</option>
+                                {{/contextfilteroptions}}
+                            </select>
+                            <div class="form-text small text-muted">{{#str}} backend_only_filter_hint, local_lms_dashboard_builder {{/str}}</div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} user_filter_label, local_lms_dashboard_builder {{/str}}</label>
+                            <select name="user_filter" class="form-select form-select-sm">
+                                {{#userfilteroptions}}
+                                <option value="{{value}}">{{label}}</option>
+                                {{/userfilteroptions}}
+                            </select>
+                            <div class="form-text small text-muted">{{#str}} backend_only_filter_hint, local_lms_dashboard_builder {{/str}}</div>
+                        </div>
+                        <div class="col-6 col-md-6">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} aggregation, local_lms_dashboard_builder {{/str}}</label>
+                            <select name="aggregation" class="form-select form-select-sm">
+                                {{#aggoptions}}
+                                <option value="{{value}}">{{label}}</option>
+                                {{/aggoptions}}
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-6">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} row_limit, local_lms_dashboard_builder {{/str}}</label>
+                            <input type="number" name="limit" class="form-control form-control-sm" value="20" min="1" max="100">
+                        </div>
+                        <div class="col-12 mt-3">
+                            <button type="submit" class="btn btn-primary btn-sm w-100">
+                                <i class="fa fa-save me-1" aria-hidden="true"></i>{{#str}} save_visual_query, local_lms_dashboard_builder {{/str}}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Authorized Custom SQL Query Builder -->
+        <div class="col-12 col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-light fw-bold small text-uppercase text-muted">
+                    <i class="fa fa-terminal me-1 text-danger" aria-hidden="true"></i>
+                    {{#str}} custom_sql_builder_heading, local_lms_dashboard_builder {{/str}}
+                </div>
+                <div class="card-body">
+                    {{#canconfigure}}
+                    <form method="post" action="{{actionurl}}" class="row g-2">
+                        <input type="hidden" name="action" value="createsql">
+                        <input type="hidden" name="sesskey" value="{{sesskey}}">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} custom_sql_query_name, local_lms_dashboard_builder {{/str}}</label>
+                            <input type="text" name="name" class="form-control form-control-sm" placeholder="{{#str}} custom_sql_query_name_placeholder, local_lms_dashboard_builder {{/str}}" required>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} post_grouping_optional, local_lms_dashboard_builder {{/str}}</label>
+                            <select name="groupfunc" class="form-select form-select-sm">
+                                <option value="">{{#str}} none_raw_sql_groups, local_lms_dashboard_builder {{/str}}</option>
+                                {{#groupingoptions}}
+                                <option value="{{value}}">{{label}}</option>
+                                {{/groupingoptions}}
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} aggregation, local_lms_dashboard_builder {{/str}}</label>
+                            <select name="aggregation" class="form-select form-select-sm">
+                                {{#aggoptions}}
+                                <option value="{{value}}">{{label}}</option>
+                                {{/aggoptions}}
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} context_filter_label, local_lms_dashboard_builder {{/str}}</label>
+                            <select name="context_filter" class="form-select form-select-sm">
+                                {{#contextfilteroptions}}
+                                <option value="{{value}}">{{label}}</option>
+                                {{/contextfilteroptions}}
+                            </select>
+                            <div class="form-text small text-muted">{{#str}} backend_only_filter_hint, local_lms_dashboard_builder {{/str}}</div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} user_filter_label, local_lms_dashboard_builder {{/str}}</label>
+                            <select name="user_filter" class="form-select form-select-sm">
+                                {{#userfilteroptions}}
+                                <option value="{{value}}">{{label}}</option>
+                                {{/userfilteroptions}}
+                            </select>
+                            <div class="form-text small text-muted">{{#str}} backend_only_filter_hint, local_lms_dashboard_builder {{/str}}</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold mb-1">
+                                {{#str}} parameterized_readonly_sql, local_lms_dashboard_builder {{/str}}
+                            </label>
+                            <textarea name="customsql" class="form-control form-control-sm font-monospace" rows="4"
+                                      placeholder="SELECT c.shortname, COUNT(ue.id) AS enrolled FROM {course} c JOIN {enrol} e ON e.courseid = c.id JOIN {user_enrolments} ue ON ue.enrolid = e.id WHERE c.id > 1 GROUP BY c.shortname" required></textarea>
+                        </div>
+                        <div class="col-12 mt-2">
+                            <button type="submit" class="btn btn-dark btn-sm w-100">
+                                <i class="fa fa-shield-alt me-1" aria-hidden="true"></i>{{#str}} validate_save_sql_query, local_lms_dashboard_builder {{/str}}
+                            </button>
+                        </div>
+                    </form>
+                    {{/canconfigure}}
+                    {{^canconfigure}}
+                    <div class="alert alert-info mb-0 small">
+                        {{#str}} custom_sql_capability_notice, local_lms_dashboard_builder {{/str}}
+                    </div>
+                    {{/canconfigure}}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Saved Custom Queries Table -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-light fw-bold small text-uppercase text-muted">
+            {{#str}} saved_custom_queries_heading, local_lms_dashboard_builder {{/str}}
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>{{#str}} provider_key, local_lms_dashboard_builder {{/str}}</th>
+                        <th>{{#str}} query_name, local_lms_dashboard_builder {{/str}}</th>
+                        <th>{{#str}} query_type, local_lms_dashboard_builder {{/str}}</th>
+                        <th>{{#str}} definition_sql_summary, local_lms_dashboard_builder {{/str}}</th>
+                        <th class="text-end">{{#str}} action, local_lms_dashboard_builder {{/str}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#savedqueries}}
+                    <tr>
+                        <td><code>{{providerid}}</code></td>
+                        <td class="fw-semibold">{{name}}</td>
+                        <td>
+                            {{#issql}}<span class="badge bg-dark">{{#str}} query_type_sql, local_lms_dashboard_builder {{/str}}</span>{{/issql}}
+                            {{^issql}}<span class="badge bg-primary-subtle text-primary">{{#str}} query_type_visual, local_lms_dashboard_builder {{/str}}</span>{{/issql}}
+                        </td>
+                        <td><code class="small text-muted">{{summary}}</code></td>
+                        <td class="text-end">
+                            <form method="post" action="{{actionurl}}" class="d-inline"
+                                  onsubmit="return confirm('{{#str}} confirm_delete_query, local_lms_dashboard_builder {{/str}}');">
+                                <input type="hidden" name="action" value="delete">
+                                <input type="hidden" name="id" value="{{id}}">
+                                <input type="hidden" name="sesskey" value="{{sesskey}}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="fa fa-trash" aria-hidden="true"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {{/savedqueries}}
+                    {{^hassavedqueries}}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-3 small">
+                            {{#str}} no_custom_queries_saved, local_lms_dashboard_builder {{/str}}
+                        </td>
+                    </tr>
+                    {{/hassavedqueries}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Built-in Query Providers Catalog -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-light fw-bold small text-uppercase text-muted">
+            {{#str}} builtin_providers_registry_heading, local_lms_dashboard_builder {{/str}}
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>{{#str}} provider_id, local_lms_dashboard_builder {{/str}}</th>
+                        <th>{{#str}} provider_name, local_lms_dashboard_builder {{/str}}</th>
+                        <th>{{#str}} dashboard_description, local_lms_dashboard_builder {{/str}}</th>
+                        <th>{{#str}} supported_widgets, local_lms_dashboard_builder {{/str}}</th>
+                        <th>{{#str}} supported_filters, local_lms_dashboard_builder {{/str}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#builtins}}
+                    <tr>
+                        <td><code>{{id}}</code></td>
+                        <td class="fw-bold">{{name}}</td>
+                        <td class="small text-muted">{{description}}</td>
+                        <td><span class="small">{{widgets}}</span></td>
+                        <td><span class="small text-secondary">{{filters}}</span></td>
+                    </tr>
+                    {{/builtins}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{{#js}}
+document.addEventListener('DOMContentLoaded', function() {
+    var sourceSelect = document.getElementById('visual-query-source');
+    var dimSelect = document.getElementById('visual-query-dimension');
+    var metricSelect = document.getElementById('visual-query-metric');
+
+    if (!sourceSelect || !dimSelect || !metricSelect) {
+        return;
+    }
+
+    function updateCascadingOptions() {
+        var selectedSource = sourceSelect.value;
+        var dimOptions = dimSelect.querySelectorAll('option');
+        var firstDimVisible = null;
+        dimOptions.forEach(function(opt) {
+            var match = opt.getAttribute('data-source') === selectedSource;
+            opt.style.display = match ? '' : 'none';
+            opt.disabled = !match;
+            if (match && !firstDimVisible) {
+                firstDimVisible = opt;
+            }
+        });
+        if (dimSelect.selectedOptions.length === 0 || dimSelect.selectedOptions[0].disabled) {
+            if (firstDimVisible) {
+                firstDimVisible.selected = true;
+            }
+        }
+
+        var metricOptions = metricSelect.querySelectorAll('option');
+        var firstMetricVisible = null;
+        metricOptions.forEach(function(opt) {
+            var match = opt.getAttribute('data-source') === selectedSource;
+            opt.style.display = match ? '' : 'none';
+            opt.disabled = !match;
+            if (match && !firstMetricVisible) {
+                firstMetricVisible = opt;
+            }
+        });
+        if (metricSelect.selectedOptions.length === 0 || metricSelect.selectedOptions[0].disabled) {
+            if (firstMetricVisible) {
+                firstMetricVisible.selected = true;
+            }
+        }
+    }
+
+    sourceSelect.addEventListener('change', updateCascadingOptions);
+    updateCascadingOptions();
+});
+{{/js}}

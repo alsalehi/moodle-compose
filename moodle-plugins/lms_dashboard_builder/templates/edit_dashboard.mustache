@@ -1,0 +1,590 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_lms_dashboard_builder/edit_dashboard
+
+    Interactive Dashboard Builder template.
+}}
+<div class="local-lms-dashboard-builder-editor container-fluid px-0">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <a href="{{manageurl}}" class="btn btn-sm btn-outline-secondary mb-2">
+                <i class="fa fa-arrow-left me-1" aria-hidden="true"></i>{{#str}} back_to_dashboards, local_lms_dashboard_builder {{/str}}
+            </a>
+            <h2 class="h3 fw-bold mb-0">{{name}}</h2>
+        </div>
+        <a href="{{queriesurl}}" class="btn btn-sm btn-outline-primary">
+            <i class="fa fa-database me-1" aria-hidden="true"></i>{{#str}} manage_queries_sql, local_lms_dashboard_builder {{/str}}
+        </a>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <!-- Left Column: Settings, Role Mapping & Global Filters -->
+        <div class="col-12 col-lg-5">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-light fw-bold small text-uppercase text-muted">
+                    <i class="fa fa-cog me-1 text-primary" aria-hidden="true"></i>
+                    {{#str}} dashboard_settings_heading, local_lms_dashboard_builder {{/str}}
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{actionurl}}">
+                        <input type="hidden" name="action" value="savedashboard">
+                        <input type="hidden" name="sesskey" value="{{sesskey}}">
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} dashboard_name, local_lms_dashboard_builder {{/str}}</label>
+                            <input type="text" name="name" class="form-control form-control-sm" value="{{name}}" required>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} dashboard_description, local_lms_dashboard_builder {{/str}}</label>
+                            <textarea name="description" class="form-control form-control-sm" rows="2">{{description}}</textarea>
+                        </div>
+                        <div class="row g-2 mb-2">
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold mb-1">{{#str}} dashboard_scope, local_lms_dashboard_builder {{/str}}</label>
+                                <select name="scope" class="form-select form-select-sm">
+                                    <option value="course" {{#scope_course}}selected{{/scope_course}}>{{#str}} scope_course, local_lms_dashboard_builder {{/str}}</option>
+                                    <option value="system" {{#scope_system}}selected{{/scope_system}}>{{#str}} scope_system, local_lms_dashboard_builder {{/str}}</option>
+                                    <option value="category" {{#scope_category}}selected{{/scope_category}}>{{#str}} scope_category, local_lms_dashboard_builder {{/str}}</option>
+                                    <option value="my" {{#scope_my}}selected{{/scope_my}}>{{#str}} scope_my, local_lms_dashboard_builder {{/str}}</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold mb-1">{{#str}} status, local_lms_dashboard_builder {{/str}}</label>
+                                <select name="status" class="form-select form-select-sm">
+                                    <option value="1" {{#status_published}}selected{{/status_published}}>{{#str}} status_published_blocks, local_lms_dashboard_builder {{/str}}</option>
+                                    <option value="0" {{#status_draft}}selected{{/status_draft}}>{{#str}} status_draft, local_lms_dashboard_builder {{/str}}</option>
+                                    <option value="2" {{#status_archived}}selected{{/status_archived}}>{{#str}} status_archived, local_lms_dashboard_builder {{/str}}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold mb-1">{{#str}} category_tag, local_lms_dashboard_builder {{/str}}</label>
+                                <input type="text" name="category" class="form-control form-control-sm" value="{{category}}">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold mb-1">{{#str}} css_class, local_lms_dashboard_builder {{/str}}</label>
+                                <input type="text" name="cssclass" class="form-control form-control-sm" value="{{cssclass}}" placeholder="{{#str}} css_class_placeholder, local_lms_dashboard_builder {{/str}}">
+                            </div>
+                            <div class="col-12 mt-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="isdefault" value="1" id="chk-default" {{#isdefault}}checked{{/isdefault}}>
+                                    <label class="form-check-label small" for="chk-default">{{#str}} default_for_scope, local_lms_dashboard_builder {{/str}}</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold mb-1 d-block">{{#str}} role_based_visibility, local_lms_dashboard_builder {{/str}}</label>
+                            <div class="border rounded p-2 bg-light d-flex flex-wrap gap-2">
+                                {{#roleoptions}}
+                                <div class="form-check form-check-inline mb-1 {{#ispublic}}p-1 border rounded bg-white shadow-sm{{/ispublic}}">
+                                    <input class="form-check-input role-filter-chk" type="checkbox" name="roleids[]" value="{{id}}" id="role-{{id}}" {{#checked}}checked{{/checked}} {{#ispublic}}data-ispublic="1"{{/ispublic}}>
+                                    <label class="form-check-label small fw-semibold {{#ispublic}}text-primary{{/ispublic}}" for="role-{{id}}">
+                                        {{#ispublic}}<i class="fa fa-globe me-1"></i>{{/ispublic}}{{label}}
+                                    </label>
+                                </div>
+                                {{/roleoptions}}
+                            </div>
+                            {{#ispublicvisitor}}
+                            <div class="alert alert-info py-1 px-2 mt-2 small mb-0">
+                                <i class="fa fa-info-circle me-1"></i>{{#str}} visitor_kpi_only_notice, local_lms_dashboard_builder {{/str}}
+                            </div>
+                            {{/ispublicvisitor}}
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm w-100">{{#str}} save_dashboard_settings, local_lms_dashboard_builder {{/str}}</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Per-Dashboard Customizable Global Filter Builder -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-light fw-bold small text-uppercase text-muted">
+                    <i class="fa fa-filter me-1 text-primary" aria-hidden="true"></i>
+                    {{#str}} global_filter_bar_heading, local_lms_dashboard_builder {{/str}}
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush mb-3">
+                        {{#filters}}
+                        <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="fw-semibold small">{{label}}</span>
+                                <span class="badge bg-light text-dark border ms-1">{{filtertype}}</span>
+                                {{#defaultvalue}}<span class="text-muted small ms-1">({{#str}} default_prefix, local_lms_dashboard_builder {{/str}}: {{defaultvalue}})</span>{{/defaultvalue}}
+                            </div>
+                            <form method="post" action="{{actionurl}}" class="d-inline">
+                                <input type="hidden" name="action" value="deletefilter">
+                                <input type="hidden" name="filterid" value="{{id}}">
+                                <input type="hidden" name="sesskey" value="{{sesskey}}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2" title="{{#str}} remove_filter, local_lms_dashboard_builder {{/str}}">
+                                    <i class="fa fa-times" aria-hidden="true"></i>
+                                </button>
+                            </form>
+                        </li>
+                        {{/filters}}
+                    </ul>
+
+                    <form method="post" action="{{actionurl}}" class="row g-2" id="filter-builder-form">
+                        <input type="hidden" name="action" value="addfilter">
+                        <input type="hidden" name="sesskey" value="{{sesskey}}">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} filter_type, local_lms_dashboard_builder {{/str}}</label>
+                            <select name="filtertype" id="filtertype-select" class="form-select form-select-sm">
+                                {{#filtertypeoptions}}
+                                <option value="{{value}}">{{label}}</option>
+                                {{/filtertypeoptions}}
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} display_label, local_lms_dashboard_builder {{/str}}</label>
+                            <input type="text" name="label" class="form-control form-control-sm" placeholder="{{#str}} display_label_placeholder, local_lms_dashboard_builder {{/str}}" required>
+                        </div>
+                        <div class="col-6" id="filter-defaultvalue-wrapper">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} default_value, local_lms_dashboard_builder {{/str}}</label>
+                            <input type="text" name="defaultvalue" class="form-control form-control-sm" placeholder="{{#str}} default_value_placeholder, local_lms_dashboard_builder {{/str}}">
+                        </div>
+
+                        <!-- Cascading fields: from_context -->
+                        <div class="col-6 filter-cascade-section d-none" id="filter-cfg-context">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} context_field, local_lms_dashboard_builder {{/str}}</label>
+                            <select name="context_field" class="form-select form-select-sm">
+                                <option value="courseid">{{#str}} context_field_courseid, local_lms_dashboard_builder {{/str}}</option>
+                                <option value="categoryid">{{#str}} context_field_categoryid, local_lms_dashboard_builder {{/str}}</option>
+                                <option value="contextid">{{#str}} context_field_contextid, local_lms_dashboard_builder {{/str}}</option>
+                                <option value="contextlevel">{{#str}} context_field_contextlevel, local_lms_dashboard_builder {{/str}}</option>
+                                <option value="instanceid">{{#str}} context_field_instanceid, local_lms_dashboard_builder {{/str}}</option>
+                            </select>
+                        </div>
+
+                        <!-- Cascading fields: from_user -->
+                        <div class="col-6 filter-cascade-section d-none" id="filter-cfg-user">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} user_field, local_lms_dashboard_builder {{/str}}</label>
+                            <select name="user_field" class="form-select form-select-sm">
+                                <option value="userid">{{#str}} user_field_userid, local_lms_dashboard_builder {{/str}}</option>
+                                <option value="department">{{#str}} user_field_department, local_lms_dashboard_builder {{/str}}</option>
+                                <option value="institution">{{#str}} user_field_institution, local_lms_dashboard_builder {{/str}}</option>
+                                <option value="cohortid">{{#str}} user_field_cohortid, local_lms_dashboard_builder {{/str}}</option>
+                                <option value="roleid">{{#str}} user_field_roleid, local_lms_dashboard_builder {{/str}}</option>
+                            </select>
+                        </div>
+
+                        <!-- Cascading fields: from_request -->
+                        <div class="col-6 filter-cascade-section d-none" id="filter-cfg-request-param">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} request_param_name, local_lms_dashboard_builder {{/str}}</label>
+                            <input type="text" name="request_param_name" class="form-control form-control-sm" placeholder="{{#str}} request_param_name_placeholder, local_lms_dashboard_builder {{/str}}">
+                        </div>
+                        <div class="col-6 filter-cascade-section d-none" id="filter-cfg-request-vis">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} request_visibility_mode, local_lms_dashboard_builder {{/str}}</label>
+                            <select name="request_visibility" class="form-select form-select-sm">
+                                <option value="backend">{{#str}} visibility_backend_only, local_lms_dashboard_builder {{/str}}</option>
+                                <option value="visible">{{#str}} visibility_visible_to_user, local_lms_dashboard_builder {{/str}}</option>
+                            </select>
+                        </div>
+
+                        <!-- Cascading fields: custom -->
+                        <div class="col-6 filter-cascade-section" id="filter-cfg-custom-key">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} custom_filter_key, local_lms_dashboard_builder {{/str}}</label>
+                            <input type="text" name="custom_paramkey" class="form-control form-control-sm" placeholder="{{#str}} custom_filter_key_placeholder, local_lms_dashboard_builder {{/str}}">
+                        </div>
+                        <div class="col-12 filter-cascade-section" id="filter-cfg-custom-options">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} custom_filter_options, local_lms_dashboard_builder {{/str}}</label>
+                            <input type="text" name="custom_options" class="form-control form-control-sm" placeholder="{{#str}} custom_filter_options_placeholder, local_lms_dashboard_builder {{/str}}">
+                        </div>
+                        <div class="col-12 mt-2">
+                            <button type="submit" class="btn btn-outline-primary btn-sm w-100">
+                                <i class="fa fa-plus me-1" aria-hidden="true"></i>{{#str}} add_global_filter_btn, local_lms_dashboard_builder {{/str}}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Pre-Built Widget Presets & Custom Chart/Widget Builder -->
+        <div class="col-12 col-lg-7">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-light fw-bold small text-uppercase text-muted">
+                    <i class="fa fa-bolt me-1 text-warning" aria-hidden="true"></i>
+                    {{#str}} quick_add_preset_heading, local_lms_dashboard_builder {{/str}}
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{actionurl}}" class="row g-2 align-items-end">
+                        <input type="hidden" name="action" value="addpreset">
+                        <input type="hidden" name="sesskey" value="{{sesskey}}">
+                        <div class="col-12 col-md-8">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} select_prebuilt_widget, local_lms_dashboard_builder {{/str}}</label>
+                            <select name="presetkey" class="form-select form-select-sm">
+                                {{#presetoptions}}
+                                <option value="{{key}}">{{label}}</option>
+                                {{/presetoptions}}
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <button type="submit" class="btn btn-primary btn-sm w-100">
+                                <i class="fa fa-plus-circle me-1" aria-hidden="true"></i>{{#str}} insert_preset_widget, local_lms_dashboard_builder {{/str}}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 mb-4" id="widget-editor-card">
+                <div class="card-header {{#editingwidget}}bg-primary-subtle text-primary{{/editingwidget}}{{^editingwidget}}bg-light text-muted{{/editingwidget}} fw-bold small text-uppercase d-flex justify-content-between align-items-center">
+                    <span>
+                        <i class="fa {{#editingwidget}}fa-edit{{/editingwidget}}{{^editingwidget}}fa-chart-pie text-primary{{/editingwidget}} me-1" aria-hidden="true"></i>
+                        {{#editingwidget}}
+                            {{#str}} edit_custom_widget_heading, local_lms_dashboard_builder {{/str}}: {{title}}
+                        {{/editingwidget}}
+                        {{^editingwidget}}
+                            {{#str}} add_custom_widget_heading, local_lms_dashboard_builder {{/str}}
+                        {{/editingwidget}}
+                    </span>
+                    {{#editingwidget}}
+                    <a href="{{actionurl}}" class="btn btn-sm btn-outline-secondary py-0 px-2">
+                        <i class="fa fa-times me-1" aria-hidden="true"></i>{{#str}} cancel_edit, local_lms_dashboard_builder {{/str}}
+                    </a>
+                    {{/editingwidget}}
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{actionurl}}" class="row g-2">
+                        {{#editingwidget}}
+                        <input type="hidden" name="action" value="updatewidget">
+                        <input type="hidden" name="widgetid" value="{{id}}">
+                        <input type="hidden" name="sortorder" value="{{sortorder}}">
+                        {{/editingwidget}}
+                        {{^editingwidget}}
+                        <input type="hidden" name="action" value="addwidget">
+                        {{/editingwidget}}
+                        <input type="hidden" name="sesskey" value="{{sesskey}}">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} widget_title, local_lms_dashboard_builder {{/str}}</label>
+                            <input type="text" name="title" class="form-control form-control-sm"
+                                   value="{{#editingwidget}}{{title}}{{/editingwidget}}"
+                                   placeholder="{{#str}} widget_title_placeholder, local_lms_dashboard_builder {{/str}}" required>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} widget_type, local_lms_dashboard_builder {{/str}}</label>
+                            <select name="widgettype" class="form-select form-select-sm">
+                                {{#widgettypeoptions}}
+                                <option value="{{value}}" {{#selected}}selected{{/selected}}>{{label}}</option>
+                                {{/widgettypeoptions}}
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} grid_width, local_lms_dashboard_builder {{/str}}</label>
+                            <select name="grid_width" class="form-select form-select-sm">
+                                {{#gridwidthoptions}}
+                                <option value="{{value}}" {{#selected}}selected{{/selected}}>{{label}}</option>
+                                {{/gridwidthoptions}}
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} query_provider_label, local_lms_dashboard_builder {{/str}}</label>
+                            <select name="queryid" class="form-select form-select-sm">
+                                {{#provideroptions}}
+                                <option value="{{value}}" {{#selected}}selected{{/selected}}>{{label}}</option>
+                                {{/provideroptions}}
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} chart_type_for_charts, local_lms_dashboard_builder {{/str}}</label>
+                            <select name="charttype" class="form-select form-select-sm">
+                                {{#charttypeoptions}}
+                                <option value="{{value}}" {{#selected}}selected{{/selected}}>{{label}}</option>
+                                {{/charttypeoptions}}
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} color_palette, local_lms_dashboard_builder {{/str}}</label>
+                            <select name="palette" class="form-select form-select-sm">
+                                {{#paletteoptions}}
+                                <option value="{{value}}" {{#selected}}selected{{/selected}}>{{label}}</option>
+                                {{/paletteoptions}}
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} custom_grouping_function, local_lms_dashboard_builder {{/str}}</label>
+                            <select name="groupby" class="form-select form-select-sm">
+                                <option value="">{{#str}} use_query_global_default, local_lms_dashboard_builder {{/str}}</option>
+                                {{#groupingoptions}}
+                                <option value="{{value}}" {{#selected}}selected{{/selected}}>{{label}}</option>
+                                {{/groupingoptions}}
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} xaxis_label, local_lms_dashboard_builder {{/str}}</label>
+                            <input type="text" name="xaxis_label" class="form-control form-control-sm"
+                                   value="{{#editingwidget}}{{xaxis_label}}{{/editingwidget}}"
+                                   placeholder="{{#str}} xaxis_label_placeholder, local_lms_dashboard_builder {{/str}}">
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} yaxis_label, local_lms_dashboard_builder {{/str}}</label>
+                            <input type="text" name="yaxis_label" class="form-control form-control-sm"
+                                   value="{{#editingwidget}}{{yaxis_label}}{{/editingwidget}}"
+                                   placeholder="{{#str}} yaxis_label_placeholder, local_lms_dashboard_builder {{/str}}">
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} kpi_metric_key, local_lms_dashboard_builder {{/str}}</label>
+                            <input type="text" name="metric" class="form-control form-control-sm"
+                                   value="{{#editingwidget}}{{metric}}{{/editingwidget}}"
+                                   placeholder="{{#str}} kpi_metric_placeholder, local_lms_dashboard_builder {{/str}}">
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} value_suffix, local_lms_dashboard_builder {{/str}}</label>
+                            <input type="text" name="suffix" class="form-control form-control-sm"
+                                   value="{{#editingwidget}}{{suffix}}{{/editingwidget}}"
+                                   placeholder="{{#str}} value_suffix_placeholder, local_lms_dashboard_builder {{/str}}">
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} legend_position, local_lms_dashboard_builder {{/str}}</label>
+                            <select name="legend_position" class="form-select form-select-sm">
+                                {{#legendoptions}}
+                                <option value="{{value}}" {{#selected}}selected{{/selected}}>{{label}}</option>
+                                {{/legendoptions}}
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} custom_hex_colors, local_lms_dashboard_builder {{/str}}</label>
+                            <input type="text" name="custom_colors" class="form-control form-control-sm"
+                                   value="{{#editingwidget}}{{custom_colors}}{{/editingwidget}}"
+                                   placeholder="{{#str}} custom_hex_colors_placeholder, local_lms_dashboard_builder {{/str}}">
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label small fw-semibold mb-1">{{#str}} css_class, local_lms_dashboard_builder {{/str}}</label>
+                            <input type="text" name="cssclass" class="form-control form-control-sm"
+                                   value="{{#editingwidget}}{{cssclass}}{{/editingwidget}}"
+                                   placeholder="{{#str}} css_class_placeholder, local_lms_dashboard_builder {{/str}}">
+                        </div>
+                        <div class="col-12 mt-2 d-flex gap-2">
+                            {{#editingwidget}}
+                            <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
+                                <i class="fa fa-save me-1" aria-hidden="true"></i>{{#str}} save_widget_changes, local_lms_dashboard_builder {{/str}}
+                            </button>
+                            <a href="{{actionurl}}" class="btn btn-outline-secondary btn-sm">
+                                {{#str}} cancel, local_lms_dashboard_builder {{/str}}
+                            </a>
+                            {{/editingwidget}}
+                            {{^editingwidget}}
+                            <button type="submit" class="btn btn-success btn-sm w-100">
+                                <i class="fa fa-plus me-1" aria-hidden="true"></i>{{#str}} add_custom_widget_btn, local_lms_dashboard_builder {{/str}}
+                            </button>
+                            {{/editingwidget}}
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Configured Dashboard Widgets List with Edit & Reorder -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-light fw-bold small text-uppercase text-muted">
+                    <i class="fa fa-layer-group me-1 text-primary" aria-hidden="true"></i>
+                    {{#str}} configured_widgets, local_lms_dashboard_builder {{/str}}
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{{#str}} widget_order, local_lms_dashboard_builder {{/str}}</th>
+                                <th>{{#str}} widget_title, local_lms_dashboard_builder {{/str}}</th>
+                                <th>{{#str}} widget_type, local_lms_dashboard_builder {{/str}}</th>
+                                <th>{{#str}} query_source, local_lms_dashboard_builder {{/str}}</th>
+                                <th>{{#str}} grid_width_col, local_lms_dashboard_builder {{/str}}</th>
+                                <th class="text-end">{{#str}} actions, local_lms_dashboard_builder {{/str}}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#widgets}}
+                            <tr class="{{#isediting}}table-active{{/isediting}}">
+                                <td class="text-nowrap">
+                                    <div class="d-inline-flex align-items-center gap-1">
+                                        <span class="badge bg-light text-secondary border me-1">#{{position}}</span>
+                                        <form method="post" action="{{actionurl}}" class="d-inline">
+                                            <input type="hidden" name="action" value="movewidget">
+                                            <input type="hidden" name="widgetid" value="{{id}}">
+                                            <input type="hidden" name="direction" value="up">
+                                            <input type="hidden" name="sesskey" value="{{sesskey}}">
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary py-0 px-1"
+                                                     title="{{#str}} move_widget_up, local_lms_dashboard_builder {{/str}}"
+                                                     {{#isfirst}}disabled{{/isfirst}}>
+                                                <i class="fa fa-arrow-up" aria-hidden="true"></i>
+                                            </button>
+                                        </form>
+                                        <form method="post" action="{{actionurl}}" class="d-inline">
+                                            <input type="hidden" name="action" value="movewidget">
+                                            <input type="hidden" name="widgetid" value="{{id}}">
+                                            <input type="hidden" name="direction" value="down">
+                                            <input type="hidden" name="sesskey" value="{{sesskey}}">
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary py-0 px-1"
+                                                     title="{{#str}} move_widget_down, local_lms_dashboard_builder {{/str}}"
+                                                     {{#islast}}disabled{{/islast}}>
+                                                <i class="fa fa-arrow-down" aria-hidden="true"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="fw-semibold small">{{title}}</span>
+                                    {{#cssclass}}
+                                    <div><code class="small text-muted">.{{cssclass}}</code></div>
+                                    {{/cssclass}}
+                                </td>
+                                <td><span class="badge bg-primary-subtle text-primary">{{widgettype}}</span></td>
+                                <td><code class="small">{{queryid}}</code></td>
+                                <td class="small">col-md-{{grid_width}}</td>
+                                <td class="text-end text-nowrap">
+                                    <div class="d-inline-flex gap-1" role="group">
+                                        <a href="{{editurl}}" class="btn btn-sm btn-outline-primary py-0 px-2"
+                                           title="{{#str}} edit_widget, local_lms_dashboard_builder {{/str}}">
+                                            <i class="fa fa-edit" aria-hidden="true"></i>
+                                        </a>
+                                        <form method="post" action="{{actionurl}}" class="d-inline"
+                                              onsubmit="return confirm('{{#str}} confirm_delete_widget, local_lms_dashboard_builder {{/str}}');">
+                                            <input type="hidden" name="action" value="deletewidget">
+                                            <input type="hidden" name="widgetid" value="{{id}}">
+                                            <input type="hidden" name="sesskey" value="{{sesskey}}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2"
+                                                    title="{{#str}} delete_widget, local_lms_dashboard_builder {{/str}}">
+                                                <i class="fa fa-trash" aria-hidden="true"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {{/widgets}}
+                            {{^haswidgets}}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-3 small">
+                                    {{#str}} no_widgets_configured, local_lms_dashboard_builder {{/str}}
+                                </td>
+                            </tr>
+                            {{/haswidgets}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Interactive Preview -->
+    <div class="card shadow-sm border-0 mt-4">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <span class="fw-bold small text-uppercase">
+                <i class="fa fa-eye me-1" aria-hidden="true"></i>{{#str}} live_preview_heading, local_lms_dashboard_builder {{/str}}
+            </span>
+            <span class="badge bg-secondary">{{#str}} block_placement_preview, local_lms_dashboard_builder {{/str}}</span>
+        </div>
+        <div class="card-body bg-light p-4">
+            {{> local_lms_dashboard_builder/dashboard_view }}
+        </div>
+    </div>
+</div>
+
+<datalist id="kpi-metric-datalist"></datalist>
+
+{{#js}}
+(function() {
+    // 1. Cascading Global Filter Builder fields.
+    var filterTypeSel = document.getElementById('filtertype-select');
+    function updateFilterCascade() {
+        if (!filterTypeSel) return;
+        var val = filterTypeSel.value;
+        var contextSec = document.getElementById('filter-cfg-context');
+        var userSec = document.getElementById('filter-cfg-user');
+        var reqParamSec = document.getElementById('filter-cfg-request-param');
+        var reqVisSec = document.getElementById('filter-cfg-request-vis');
+        var customKeySec = document.getElementById('filter-cfg-custom-key');
+        var customOptSec = document.getElementById('filter-cfg-custom-options');
+        var defValSec = document.getElementById('filter-defaultvalue-wrapper');
+
+        if (contextSec) contextSec.classList.add('d-none');
+        if (userSec) userSec.classList.add('d-none');
+        if (reqParamSec) reqParamSec.classList.add('d-none');
+        if (reqVisSec) reqVisSec.classList.add('d-none');
+        if (customKeySec) customKeySec.classList.add('d-none');
+        if (customOptSec) customOptSec.classList.add('d-none');
+        if (defValSec) defValSec.classList.remove('d-none');
+
+        if (val === 'from_context') {
+            if (contextSec) contextSec.classList.remove('d-none');
+            if (defValSec) defValSec.classList.add('d-none');
+        } else if (val === 'from_user') {
+            if (userSec) userSec.classList.remove('d-none');
+            if (defValSec) defValSec.classList.add('d-none');
+        } else if (val === 'from_request') {
+            if (reqParamSec) reqParamSec.classList.remove('d-none');
+            if (reqVisSec) reqVisSec.classList.remove('d-none');
+        } else if (val === 'custom') {
+            if (customKeySec) customKeySec.classList.remove('d-none');
+            if (customOptSec) customOptSec.classList.remove('d-none');
+        }
+    }
+    if (filterTypeSel) {
+        filterTypeSel.addEventListener('change', updateFilterCascade);
+        updateFilterCascade();
+    }
+
+    // 2. Cascading Query Provider -> KPI Metric Datalist.
+    var metricCatalog = {{{providermetricscatalogjson}}};
+    var querySelect = document.querySelector('select[name="queryid"]');
+    var metricInput = document.querySelector('input[name="metric"]');
+    var datalist = document.getElementById('kpi-metric-datalist');
+
+    function updateMetricDatalist() {
+        if (!querySelect || !datalist) return;
+        var qid = querySelect.value;
+        datalist.innerHTML = '';
+        if (metricCatalog && metricCatalog[qid]) {
+            var metrics = metricCatalog[qid];
+            Object.keys(metrics).forEach(function(k) {
+                var opt = document.createElement('option');
+                opt.value = k;
+                opt.label = metrics[k];
+                datalist.appendChild(opt);
+            });
+            if (metricInput) {
+                metricInput.setAttribute('list', 'kpi-metric-datalist');
+            }
+        }
+    }
+    if (querySelect) {
+        querySelect.addEventListener('change', updateMetricDatalist);
+        updateMetricDatalist();
+    }
+
+    // 3. Cascading Public Visitor toggle -> restrict to KPI only.
+    var publicRoleChk = document.querySelector('input.role-filter-chk[data-ispublic="1"]');
+    var widgetTypeSel = document.querySelector('select[name="widgettype"]');
+    function checkPublicVisitorMode() {
+        if (!publicRoleChk || !widgetTypeSel) return;
+        var isPublic = publicRoleChk.checked;
+        for (var i = 0; i < widgetTypeSel.options.length; i++) {
+            var opt = widgetTypeSel.options[i];
+            if (isPublic && opt.value !== 'kpi') {
+                opt.disabled = true;
+            } else {
+                opt.disabled = false;
+            }
+        }
+        if (isPublic && widgetTypeSel.value !== 'kpi') {
+            widgetTypeSel.value = 'kpi';
+        }
+    }
+    if (publicRoleChk) {
+        publicRoleChk.addEventListener('change', checkPublicVisitorMode);
+        checkPublicVisitorMode();
+    }
+})();
+{{/js}}

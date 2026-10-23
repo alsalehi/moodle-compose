@@ -1,0 +1,96 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_lms_dashboard_builder/filter_bar
+
+    Per-dashboard customizable global and custom filter bar.
+
+    Context variables:
+    * instanceid - Unique block/dashboard placement ID.
+    * dashboardid - Current dashboard ID.
+    * filters - Array of configured filter objects for this dashboard.
+}}
+<div class="dashboard-filter-bar bg-light p-3 rounded mb-4 border shadow-xs">
+    <form class="row g-3 align-items-end" onsubmit="return false;">
+        {{#filters}}
+        <div class="col-12 col-sm-6 col-md-auto">
+            <label class="form-label fw-semibold text-muted small mb-1 d-block"
+                   for="filter-{{paramname}}-{{#instanceid}}{{instanceid}}{{/instanceid}}{{^instanceid}}{{dashboardid}}{{/instanceid}}-{{id}}">
+                {{label}}
+            </label>
+            {{#isselect}}
+            <select class="form-select form-select-sm filter-input"
+                    id="filter-{{paramname}}-{{#instanceid}}{{instanceid}}{{/instanceid}}{{^instanceid}}{{dashboardid}}{{/instanceid}}-{{id}}"
+                    name="{{paramname}}"
+                    data-filter="{{paramname}}"
+                    data-default="{{defaultvalue}}">
+                {{#options}}
+                <option value="{{value}}" {{#selected}}selected{{/selected}}{{#categoryid}} data-categoryid="{{categoryid}}"{{/categoryid}}{{#courseid}} data-courseid="{{courseid}}"{{/courseid}}>{{label}}</option>
+                {{/options}}
+            </select>
+            {{/isselect}}
+            {{#isdaterange}}
+            <div class="d-flex align-items-center gap-1">
+                <input type="date" class="form-control form-control-sm filter-input"
+                       name="datefrom" data-default="" aria-label="{{#str}} filter_date_from, local_lms_dashboard_builder {{/str}}">
+                <span class="text-muted small">–</span>
+                <input type="date" class="form-control form-control-sm filter-input"
+                       name="dateto" data-default="" aria-label="{{#str}} filter_date_to, local_lms_dashboard_builder {{/str}}">
+            </div>
+            {{/isdaterange}}
+            {{#istext}}
+            <input type="text" class="form-control form-control-sm filter-input"
+                   id="filter-{{paramname}}-{{#instanceid}}{{instanceid}}{{/instanceid}}{{^instanceid}}{{dashboardid}}{{/instanceid}}-{{id}}"
+                   name="{{paramname}}"
+                   value="{{defaultvalue}}"
+                   data-default="{{defaultvalue}}"
+                   placeholder="{{label}}">
+            {{/istext}}
+        </div>
+        {{/filters}}
+
+        {{^filters}}
+        <div class="col-auto">
+            <label class="form-label fw-semibold text-muted small mb-1 d-block"
+                   for="filter-daterange-{{#instanceid}}{{instanceid}}{{/instanceid}}{{^instanceid}}{{dashboardid}}{{/instanceid}}">
+                {{#str}} filter_daterange, local_lms_dashboard_builder {{/str}}
+            </label>
+            <select class="form-select form-select-sm filter-input"
+                    id="filter-daterange-{{#instanceid}}{{instanceid}}{{/instanceid}}{{^instanceid}}{{dashboardid}}{{/instanceid}}"
+                    name="daterange"
+                    data-default="30d">
+                <option value="7d">{{#str}} period_last_7_days, local_lms_dashboard_builder {{/str}}</option>
+                <option value="30d" selected>{{#str}} period_last_30_days, local_lms_dashboard_builder {{/str}}</option>
+                <option value="90d">{{#str}} period_last_90_days, local_lms_dashboard_builder {{/str}}</option>
+                <option value="year">{{#str}} period_this_year, local_lms_dashboard_builder {{/str}}</option>
+                <option value="all">{{#str}} period_all_time, local_lms_dashboard_builder {{/str}}</option>
+            </select>
+        </div>
+        {{/filters}}
+
+        <div class="col-12 col-md-auto ms-md-auto d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-primary btn-apply-filters" data-dashboardid="{{dashboardid}}">
+                <i class="fa fa-filter me-1" aria-hidden="true"></i>
+                {{#str}} apply_filters, local_lms_dashboard_builder {{/str}}
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary btn-reset-filters" data-dashboardid="{{dashboardid}}">
+                <i class="fa fa-undo me-1" aria-hidden="true"></i>
+                {{#str}} reset_filters, local_lms_dashboard_builder {{/str}}
+            </button>
+        </div>
+    </form>
+</div>

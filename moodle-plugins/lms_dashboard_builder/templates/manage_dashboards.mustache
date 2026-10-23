@@ -1,0 +1,199 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_lms_dashboard_builder/manage_dashboards
+
+    Dashboard management catalog page template.
+
+    Context variables:
+    * actionurl - Base URL for form actions.
+    * queriesurl - URL for custom queries builder.
+    * sesskey - Current user session key.
+    * hasdashboards - Boolean.
+    * dashboards - List of dashboards.
+}}
+<div class="local-lms-dashboard-manage container-fluid px-0">
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link active fw-semibold" href="{{actionurl}}">
+                <i class="fa fa-th-large me-1" aria-hidden="true"></i>
+                {{#str}} manage_dashboards, local_lms_dashboard_builder {{/str}}
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{{queriesurl}}">
+                <i class="fa fa-database me-1" aria-hidden="true"></i>
+                {{#str}} manage_queries, local_lms_dashboard_builder {{/str}}
+            </a>
+        </li>
+    </ul>
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+        <div>
+            <h2 class="h3 fw-bold mb-1">{{#str}} manage_dashboards, local_lms_dashboard_builder {{/str}}</h2>
+            <p class="text-muted small mb-0">{{#str}} manage_dashboards_desc, local_lms_dashboard_builder {{/str}}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <form method="post" action="{{actionurl}}" class="d-inline">
+                <input type="hidden" name="action" value="seeddefaults">
+                <input type="hidden" name="sesskey" value="{{sesskey}}">
+                <button type="submit" class="btn btn-outline-secondary btn-sm">
+                    <i class="fa fa-magic me-1" aria-hidden="true"></i>
+                    {{#str}} restore_starter_templates, local_lms_dashboard_builder {{/str}}
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-light fw-bold small text-uppercase text-muted">
+            <i class="fa fa-plus-circle me-1 text-primary" aria-hidden="true"></i>
+            {{#str}} create_dashboard, local_lms_dashboard_builder {{/str}}
+        </div>
+        <div class="card-body">
+            <form method="post" action="{{actionurl}}" class="row g-3 align-items-end">
+                <input type="hidden" name="action" value="create">
+                <input type="hidden" name="sesskey" value="{{sesskey}}">
+                <div class="col-12 col-md-3">
+                    <label class="form-label small fw-semibold mb-1">{{#str}} dashboard_name, local_lms_dashboard_builder {{/str}}</label>
+                    <input type="text" name="name" class="form-control form-control-sm" placeholder="{{#str}} dashboard_name_placeholder, local_lms_dashboard_builder {{/str}}" required>
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label small fw-semibold mb-1">{{#str}} dashboard_description, local_lms_dashboard_builder {{/str}}</label>
+                    <input type="text" name="description" class="form-control form-control-sm" placeholder="{{#str}} dashboard_description_placeholder, local_lms_dashboard_builder {{/str}}">
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label small fw-semibold mb-1">{{#str}} dashboard_scope, local_lms_dashboard_builder {{/str}}</label>
+                    <select name="scope" class="form-select form-select-sm">
+                        <option value="course">{{#str}} scope_course, local_lms_dashboard_builder {{/str}}</option>
+                        <option value="system">{{#str}} scope_system, local_lms_dashboard_builder {{/str}}</option>
+                        <option value="category">{{#str}} scope_category, local_lms_dashboard_builder {{/str}}</option>
+                        <option value="my">{{#str}} scope_my, local_lms_dashboard_builder {{/str}}</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label small fw-semibold mb-1">{{#str}} css_class, local_lms_dashboard_builder {{/str}}</label>
+                    <input type="text" name="cssclass" class="form-control form-control-sm" placeholder="{{#str}} css_class_placeholder, local_lms_dashboard_builder {{/str}}">
+                </div>
+                <div class="col-12 col-md-2">
+                    <button type="submit" class="btn btn-primary btn-sm w-100">
+                        <i class="fa fa-plus me-1" aria-hidden="true"></i>
+                        {{#str}} create_dashboard, local_lms_dashboard_builder {{/str}}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{#hasdashboards}}
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">{{#str}} dashboard_name, local_lms_dashboard_builder {{/str}}</th>
+                        <th scope="col">{{#str}} scope_and_category, local_lms_dashboard_builder {{/str}}</th>
+                        <th scope="col">{{#str}} role_targeting, local_lms_dashboard_builder {{/str}}</th>
+                        <th scope="col">{{#str}} widgets_and_filters, local_lms_dashboard_builder {{/str}}</th>
+                        <th scope="col">{{#str}} status, local_lms_dashboard_builder {{/str}}</th>
+                        <th scope="col" class="text-end">{{#str}} actions, local_lms_dashboard_builder {{/str}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#dashboards}}
+                    <tr>
+                        <td>
+                            <a href="{{editlink}}" class="fw-bold text-dark text-decoration-none">{{name}}</a>
+                            {{#description}}
+                            <div class="small text-muted">{{description}}</div>
+                            {{/description}}
+                            {{#cssclass}}
+                            <div><code class="small text-muted">.{{cssclass}}</code></div>
+                            {{/cssclass}}
+                        </td>
+                        <td>
+                            {{#iscoursescope}}
+                            <span class="badge bg-info-subtle text-info border border-info-subtle me-1">{{#str}} scope_course, local_lms_dashboard_builder {{/str}}</span>
+                            {{/iscoursescope}}
+                            {{^iscoursescope}}
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle me-1">{{scope}}</span>
+                            {{/iscoursescope}}
+                            <span class="badge bg-light text-dark border">{{category}}</span>
+                        </td>
+                        <td>
+                            {{#ispublicvisitor}}
+                            <span class="badge bg-info text-white me-1"><i class="fa fa-globe me-1" aria-hidden="true"></i>{{#str}} role_everyone_visitor, local_lms_dashboard_builder {{/str}}</span>
+                            {{/ispublicvisitor}}
+                            <span class="small text-secondary"><i class="fa fa-user-shield me-1" aria-hidden="true"></i>{{roleslabel}}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border me-1">{{widgetcount}} {{#str}} widgets_count_badge, local_lms_dashboard_builder {{/str}}</span>
+                            <span class="badge bg-light text-dark border">{{filtercount}} {{#str}} filters_count_badge, local_lms_dashboard_builder {{/str}}</span>
+                        </td>
+                        <td>
+                            {{#ispublished}}
+                            <span class="badge bg-success-subtle text-success">{{#str}} status_published, local_lms_dashboard_builder {{/str}}</span>
+                            {{/ispublished}}
+                            {{#isdraft}}
+                            <span class="badge bg-warning-subtle text-warning">{{#str}} status_draft, local_lms_dashboard_builder {{/str}}</span>
+                            {{/isdraft}}
+                            {{#isarchived}}
+                            <span class="badge bg-secondary-subtle text-secondary">{{#str}} status_archived, local_lms_dashboard_builder {{/str}}</span>
+                            {{/isarchived}}
+                        </td>
+                        <td class="text-end">
+                            <div class="d-inline-flex gap-1" role="group">
+                                <a href="{{editlink}}" class="btn btn-sm btn-primary" title="{{#str}} edit_dashboard, local_lms_dashboard_builder {{/str}}">
+                                    <i class="fa fa-sliders me-1" aria-hidden="true"></i>{{#str}} build_edit, local_lms_dashboard_builder {{/str}}
+                                </a>
+                                <form method="post" action="{{actionurl}}" class="d-inline">
+                                    <input type="hidden" name="action" value="togglepublish">
+                                    <input type="hidden" name="id" value="{{id}}">
+                                    <input type="hidden" name="sesskey" value="{{sesskey}}">
+                                    <button type="submit" class="btn btn-sm btn-outline-success" title="{{#str}} toggle_publish_status, local_lms_dashboard_builder {{/str}}">
+                                        <i class="fa fa-check-circle" aria-hidden="true"></i>
+                                    </button>
+                                </form>
+                                <form method="post" action="{{actionurl}}" class="d-inline">
+                                    <input type="hidden" name="action" value="duplicate">
+                                    <input type="hidden" name="id" value="{{id}}">
+                                    <input type="hidden" name="sesskey" value="{{sesskey}}">
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary" title="{{#str}} duplicate_dashboard, local_lms_dashboard_builder {{/str}}">
+                                        <i class="fa fa-copy" aria-hidden="true"></i>
+                                    </button>
+                                </form>
+                                <a href="{{exportlink}}" class="btn btn-sm btn-outline-info" title="{{#str}} export_dashboard_json, local_lms_dashboard_builder {{/str}}">
+                                    <i class="fa fa-download" aria-hidden="true"></i>
+                                </a>
+                                <form method="post" action="{{actionurl}}" class="d-inline" onsubmit="return confirm('{{#str}} confirm_delete_dashboard, local_lms_dashboard_builder {{/str}}');">
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="id" value="{{id}}">
+                                    <input type="hidden" name="sesskey" value="{{sesskey}}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="{{#str}} delete_dashboard, local_lms_dashboard_builder {{/str}}">
+                                        <i class="fa fa-trash" aria-hidden="true"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {{/dashboards}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {{/hasdashboards}}
+</div>
